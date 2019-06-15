@@ -25,7 +25,7 @@ class FirestoreCache(BaseCache):
         self._options = params.get("OPTIONS") or {}
 
     @property
-    def _collection(self) -> CollectionReference:
+    def _cache(self) -> CollectionReference:
         if getattr(self, "_collection", None) is None:
             client = firestore.Client(**self._options)
             self._collection = client.collection(self._collection_name)
@@ -47,7 +47,7 @@ class FirestoreCache(BaseCache):
             data = {"expires": exp}
         else:
             data = {"value": b64encoded, "expires": exp}
-        doc: DocumentSnapshot = self._collection.document(key).get()
+        doc: DocumentSnapshot = self._cache.document(key).get()
         doc.set(data, merge=True)
 
     def validate_key(self, key):
@@ -67,7 +67,7 @@ class FirestoreCache(BaseCache):
     def get(self, key, default=None, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc: DocumentSnapshot = self._collection.document(key).get()
+        doc: DocumentSnapshot = self._cache.document(key).get()
         if not doc.exists():
             return default
         data = doc.to_dict()
@@ -91,16 +91,16 @@ class FirestoreCache(BaseCache):
     def delete(self, key, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc_ref: DocumentReference = self._collection.document(key)
+        doc_ref: DocumentReference = self._cache.document(key)
         doc_ref.delete()
 
     def has_key(self, key, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc: DocumentSnapshot = self._collection.document(key).get()
+        doc: DocumentSnapshot = self._cache.document(key).get()
         return doc.exists()
 
     def clear(self):
-        docs: Iterable[DocumentReference] = self._collection.list_documents()
+        docs: Iterable[DocumentReference] = self._cache.list_documents()
         for doc_ref in docs:
             doc_ref.delete()
