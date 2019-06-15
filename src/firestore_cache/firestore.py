@@ -47,8 +47,8 @@ class FirestoreCache(BaseCache):
             data = {"expires": exp}
         else:
             data = {"value": b64encoded, "expires": exp}
-        doc: DocumentSnapshot = self._cache.document(key).get()
-        doc.set(data, merge=True)
+        doc_ref: DocumentReference = self._cache.document(key)
+        doc_ref.set(data, merge=True)
 
     def validate_key(self, key):
         if re.search(r"^__.*__$", key):
@@ -76,7 +76,9 @@ class FirestoreCache(BaseCache):
             value = data.get("value")
             value = pickle.loads(base64.b64decode(value.encode()))
             return value
-        return default
+        else:
+            self.delete(key, version)
+            return default
 
     def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
