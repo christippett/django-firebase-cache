@@ -1,1 +1,1 @@
-from firestore_cache import FirestoreCache
+from firestore_cache.firestore import FirestoreCache
