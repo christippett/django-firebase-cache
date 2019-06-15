@@ -68,7 +68,7 @@ class FirestoreCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         doc: DocumentSnapshot = self._cache.document(key).get()
-        if not doc.exists():
+        if not doc.exists:
             return default
         data = doc.to_dict()
         expires = data.get("expires")
@@ -98,7 +98,7 @@ class FirestoreCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         doc: DocumentSnapshot = self._cache.document(key).get()
-        return doc.exists()
+        return doc.exists
 
     def clear(self):
         docs: Iterable[DocumentReference] = self._cache.list_documents()
