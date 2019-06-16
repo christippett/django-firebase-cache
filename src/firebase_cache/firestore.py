@@ -20,16 +20,27 @@ from google.cloud.firestore import (
 class FirestoreCache(BaseCache):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
-    def __init__(self, collection, params):
+    def __init__(self, cache_key, params):
         super().__init__(params)
-        self._collection_name = collection
+        self._cache_key = cache_key
         self._options = params.get("OPTIONS") or {}
 
     @property
     def _cache(self) -> CollectionReference:
         if getattr(self, "_collection", None) is None:
-            client = firestore.Client(**self._options)
-            self._collection = client.collection(self._collection_name)
+            service_account = self._options.get("service_account", None)
+            cache_group = self._options.get("cache_group", None)
+            firestore_options = self._options.get("firestore_options", {})
+            if service_account:
+                client = firestore.Client.from_service_account_json(
+                    service_account, **firestore_options
+                )
+            else:
+                client = firestore.Client(**self._options)
+            ref = client.collection(self._cache_key)
+            if cache_group:
+                ref = ref.document("cache").collection(cache_group)
+            self._collection: CollectionReference = ref
 
         return self._collection
 
