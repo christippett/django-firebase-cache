@@ -2,11 +2,12 @@
 import base64
 import pickle
 import re
+import warnings
 from datetime import datetime
 from typing import Iterable
 
 from django.conf import settings
-from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache
+from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache, CacheKeyWarning
 from django.utils import timezone
 from google.cloud import firestore
 from google.cloud.firestore import (
@@ -52,11 +53,24 @@ class FirestoreCache(BaseCache):
 
     def validate_key(self, key):
         if re.search(r"^__.*__$", key):
-            return False
+            warnings.warn(
+                "Keys used with Cloud Firestore "
+                "cannot match the regular expression __.*__: %r" % key,
+                CacheKeyWarning,
+            )
         elif re.search(r"^\.+$", key):
-            return False
+            warnings.warn(
+                "Keys used with Cloud Firestore "
+                "cannot solely consist of a single period (.) "
+                "or double periods (..): %r" % key,
+                CacheKeyWarning,
+            )
         elif re.search(r"\/", key):
-            return False
+            warnings.warn(
+                "Keys used with Cloud Firestore "
+                "cannot contain a forward slash (/): %r" % key,
+                CacheKeyWarning,
+            )
         return super().validate_key(key)
 
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
