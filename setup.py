@@ -4,7 +4,13 @@ LONG_DESCRIPTION = open("README.md").read()
 
 INSTALL_REQUIRES = ["google-cloud-firestore", "firebase_admin"]
 
-TESTS_REQUIRE = INSTALL_REQUIRES + ["mock-firestore", "pytest>=3.6", "django"]
+TESTS_REQUIRE = INSTALL_REQUIRES + [
+    "mock-firestore",
+    "pytest>=3.6",
+    "django",
+    "coverage",
+    "pytest-cov",
+]
 
 setup(
     name="django-firebase-cache",
