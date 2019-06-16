@@ -9,6 +9,7 @@ env:
   - DJANGO_VERSION=2.2
 install:
   - pip install -q Django==$DJANGO_VERSION
+  - pip install git+https://github.com/christippett/python-mock-firestore.git@enhancements
   - python setup.py -q install
 script:
   - python setup.py test
