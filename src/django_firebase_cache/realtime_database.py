@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache, CacheKeyWarning
 from django.utils import timezone
 import firebase_admin
-from firebase_admin import credentials
 from firebase_admin import db
 from firebase_admin.db import Reference
 
@@ -25,18 +24,11 @@ class RealtimeDatabaseCache(BaseCache):
     @property
     def _cache(self) -> Reference:
         if getattr(self, "_ref", None) is None:
-            cred = None
-            service_account = self._options.get("service_account", None)
-            firebase_options = self._options.get("firebase_options", {})
-            if service_account:
-                cred = credentials.Certificate(service_account)
-            firebase_admin.initialize_app(
-                credential=cred, options=firebase_options, name="DJANGO_CACHE"
-            )
+            firebase_admin.initialize_app(options=self._options, name="DJANGO_CACHE")
             ref = db.reference(self._cache_key)
             if self.key_prefix:
                 ref = ref.child(self.key_prefix)
-            self._ref: Reference
+            self._ref: Reference = ref
 
         return self._ref
 

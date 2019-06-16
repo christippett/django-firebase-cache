@@ -24,19 +24,11 @@ class FirestoreCache(BaseCache):
         super().__init__(params)
         self._cache_key = cache_key
         self._options = params.get("OPTIONS") or {}
-        self.key_prefix = self.key_prefix or "django"
 
     @property
     def _cache(self) -> CollectionReference:
         if getattr(self, "_collection", None) is None:
-            service_account = self._options.get("service_account", None)
-            firestore_options = self._options.get("firestore_options", {})
-            if service_account:
-                client = firestore.Client.from_service_account_json(
-                    service_account, **firestore_options
-                )
-            else:
-                client = firestore.Client(**self._options)
+            client = firestore.Client(**self._options)
             ref = client.collection(self._cache_key)
             self._collection: CollectionReference = ref
 
