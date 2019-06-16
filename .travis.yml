@@ -17,7 +17,7 @@ after_success:
   - pip install coveralls
   - coverage run ./setup.py -q test
   - coverage report -m
-  - coveralls --verbose
+  - coveralls
 deploy:
   provider: pypi
   user: c.tippett
