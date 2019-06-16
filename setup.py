@@ -17,7 +17,7 @@ setup(
     url="http://github.com/christippett/django-firebase-cache/",
     author="Chris Tippett",
     author_email="c.tippett@gmail.com",
-    version="1.0.0",
+    version="19.6.1",
     license="MIT",
     package_dir={"": "src"},
     packages=find_packages("src"),
