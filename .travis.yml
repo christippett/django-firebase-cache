@@ -15,7 +15,7 @@ script:
   - python setup.py test
 after_success:
   - pip install coveralls
-  - coverage run ./setup.py -q test
+  - coverage run --source=django_firebase_cache ./setup.py -q test
   - coverage report -m
   - coveralls
 deploy:
