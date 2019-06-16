@@ -24,6 +24,7 @@ class FirestoreCache(BaseCache):
         super().__init__(params)
         self._cache_key = cache_key
         self._options = params.get("OPTIONS") or {}
+        self.key_prefix = self.key_prefix or "django"
 
     @property
     def _cache(self) -> CollectionReference:
