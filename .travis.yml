@@ -1,8 +1,8 @@
 language: python
 dist: xenial
 python:
-  - 3.6
-  - 3.7
+  - "3.6"
+  - "3.7"
 env:
   - DJANGO_VERSION=1.11
   - DJANGO_VERSION=2.0
@@ -29,4 +29,5 @@ deploy:
     tags: true # only deploy on tagged commits
     branch: master
     repo: christippett/django-firebase-cache
-    condition: $TRAVIS_PYTHON_VERSION = "3.7"
+    python: "3.7"
+    condition: $DJANGO_VERSION = "2.2"
