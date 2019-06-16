@@ -17,25 +17,27 @@ from firebase_admin.db import Reference
 class RealtimeDatabaseCache(BaseCache):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
-    def __init__(self, database_url, params):
+    def __init__(self, cache_key, params):
         super().__init__(params)
-        self._database_url = database_url
+        self._cache_key = cache_key
         self._options = params.get("OPTIONS") or {}
 
     @property
     def _cache(self) -> Reference:
         if getattr(self, "_ref", None) is None:
             cred = None
-            service_account = self._options.pop("service_account", None)
-            group_name = self._options.pop("group_name", None)
+            service_account = self._options.get("service_account", None)
+            cache_group = self._options.get("cache_group", None)
+            firebase_options = self._options.get("firebase_options", {})
             if service_account:
                 cred = credentials.Certificate(service_account)
-            options = {"databaseURL": self._database_url}
-            options.update(self._options)
             firebase_admin.initialize_app(
-                credential=cred, options=options, name="DJANGO_CACHE"
+                credential=cred, options=firebase_options, name="DJANGO_CACHE"
             )
-            self._ref = db.reference("/django/cache/" + group_name)
+            ref = db.reference("/%s/cache" % self._cache_key)
+            if cache_group:
+                ref = ref.child(cache_group)
+            self._ref: Reference = ref
 
         return self._ref
 
