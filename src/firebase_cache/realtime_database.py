@@ -27,17 +27,16 @@ class RealtimeDatabaseCache(BaseCache):
         if getattr(self, "_ref", None) is None:
             cred = None
             service_account = self._options.get("service_account", None)
-            cache_group = self._options.get("cache_group", None)
             firebase_options = self._options.get("firebase_options", {})
             if service_account:
                 cred = credentials.Certificate(service_account)
             firebase_admin.initialize_app(
                 credential=cred, options=firebase_options, name="DJANGO_CACHE"
             )
-            ref = db.reference("/%s/cache" % self._cache_key)
-            if cache_group:
-                ref = ref.child(cache_group)
-            self._ref: Reference = ref
+            ref = db.reference(self._cache_key)
+            if self.key_prefix:
+                ref = ref.child(self.key_prefix)
+            self._ref: Reference
 
         return self._ref
 

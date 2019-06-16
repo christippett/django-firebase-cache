@@ -29,7 +29,6 @@ class FirestoreCache(BaseCache):
     def _cache(self) -> CollectionReference:
         if getattr(self, "_collection", None) is None:
             service_account = self._options.get("service_account", None)
-            cache_group = self._options.get("cache_group", None)
             firestore_options = self._options.get("firestore_options", {})
             if service_account:
                 client = firestore.Client.from_service_account_json(
@@ -38,8 +37,6 @@ class FirestoreCache(BaseCache):
             else:
                 client = firestore.Client(**self._options)
             ref = client.collection(self._cache_key)
-            if cache_group:
-                ref = ref.document("cache").collection(cache_group)
             self._collection: CollectionReference = ref
 
         return self._collection
@@ -58,7 +55,7 @@ class FirestoreCache(BaseCache):
         if mode == "touch":
             data = {"expires": exp}
         else:
-            data = {"value": b64encoded, "expires": exp}
+            data = {"value": b64encoded, "expires": exp, "key_prefix": self.key_prefix}
         doc_ref: DocumentReference = self._cache.document(key)
         doc_ref.set(data, merge=True)
 
@@ -128,6 +125,8 @@ class FirestoreCache(BaseCache):
         return doc.exists
 
     def clear(self):
-        docs: Iterable[DocumentReference] = self._cache.list_documents()
-        for doc_ref in docs:
-            doc_ref.delete()
+        docs: Iterable[DocumentSnapshot] = self._cache.where(
+            "key_prefix", "==", self.key_prefix
+        ).stream()
+        for doc in docs:
+            doc.reference.delete()
