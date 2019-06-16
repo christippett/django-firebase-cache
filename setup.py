@@ -20,6 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=INSTALL_REQUIRES,
     tests_require=TESTS_REQUIRE,
+    setup_requires=["pytest-runner"],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.4",
