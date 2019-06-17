@@ -20,19 +20,19 @@ from google.cloud.firestore import (
 class FirestoreCache(BaseCache):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
-    def __init__(self, cache_key, params):
+    def __init__(self, collection, params):
         super().__init__(params)
-        self._cache_key = cache_key
+        self._collection = collection
         self._options = params.get("OPTIONS") or {}
 
     @property
-    def _cache(self) -> CollectionReference:
-        if getattr(self, "_collection", None) is None:
+    def db(self) -> CollectionReference:
+        if getattr(self, "_db", None) is None:
             client = firestore.Client(**self._options)
-            ref = client.collection(self._cache_key)
-            self._collection: CollectionReference = ref
+            ref = client.collection(self._collection)
+            self._db: CollectionReference = ref
 
-        return self._collection
+        return self._db
 
     def _base_set(self, mode, key, value, timeout=DEFAULT_TIMEOUT):
         if timeout is None:
@@ -49,7 +49,7 @@ class FirestoreCache(BaseCache):
             data = {"expires": exp}
         else:
             data = {"value": b64encoded, "expires": exp, "key_prefix": self.key_prefix}
-        doc_ref: DocumentReference = self._cache.document(key)
+        doc_ref: DocumentReference = self.db.document(key)
         doc_ref.set(data, merge=True)
 
     def validate_key(self, key):
@@ -82,7 +82,7 @@ class FirestoreCache(BaseCache):
     def get(self, key, default=None, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc: DocumentSnapshot = self._cache.document(key).get()
+        doc: DocumentSnapshot = self.db.document(key).get()
         if not doc.exists:
             return default
         data = doc.to_dict()
@@ -108,17 +108,17 @@ class FirestoreCache(BaseCache):
     def delete(self, key, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc_ref: DocumentReference = self._cache.document(key)
+        doc_ref: DocumentReference = self.db.document(key)
         doc_ref.delete()
 
     def has_key(self, key, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc: DocumentSnapshot = self._cache.document(key).get()
+        doc: DocumentSnapshot = self.db.document(key).get()
         return doc.exists
 
     def clear(self):
-        docs: Iterable[DocumentSnapshot] = self._cache.where(
+        docs: Iterable[DocumentSnapshot] = self.db.where(
             "key_prefix", "==", self.key_prefix
         ).stream()
         for doc in docs:

@@ -18,19 +18,19 @@ class RealtimeDatabaseCache(BaseCache):
 
     def __init__(self, cache_key, params):
         super().__init__(params)
-        self._cache_key = cache_key
+        self.db_key = cache_key
         self._options = params.get("OPTIONS") or {}
 
     @property
-    def _cache(self) -> Reference:
-        if getattr(self, "_ref", None) is None:
-            firebase_admin.initialize_app(options=self._options, name="DJANGO_CACHE")
-            ref = db.reference(self._cache_key)
+    def db(self) -> Reference:
+        if getattr(self, "_db", None) is None:
+            firebase_admin.initialize_app(options=self._options, name="DJANGOdb")
+            ref = db.reference(self.db_key)
             if self.key_prefix:
                 ref = ref.child(self.key_prefix)
-            self._ref: Reference = ref
+            self._db: Reference = ref
 
-        return self._ref
+        return self._db
 
     def _set_data(self, mode, value, timeout=DEFAULT_TIMEOUT):
         if timeout is None:
@@ -64,12 +64,12 @@ class RealtimeDatabaseCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self._set_data("add", None, timeout)
-        self._cache.key(key).set(data)
+        self.db.key(key).set(data)
 
     def get(self, key, default=None, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._cache.child(key).get()
+        data = self.db.child(key).get()
         expires = datetime.fromtimestamp(data.get("expires", 0))
         if expires >= timezone.now():
             value = data.get("value")
@@ -83,32 +83,32 @@ class RealtimeDatabaseCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self._set_data("set", None, timeout)
-        self._cache.key(key).set(data)
+        self.db.key(key).set(data)
 
     def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
         set_data = {}
         for key, value in data.items():
             key = self.make_key(key, version=version)
             set_data[key] = self._set_data("set", value, timeout)
-        self._cache.set(set_data)
+        self.db.set(set_data)
         return []
 
     def touch(self, key, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self._set_data("touch", None, timeout)
-        self._cache.key(key).update(data)
+        self.db.key(key).update(data)
 
     def delete(self, key, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        self._cache.child(key).delete
+        self.db.child(key).delete
 
     def has_key(self, key, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        doc = self._cache.child(key).get()
+        doc = self.db.child(key).get()
         return doc is not None
 
     def clear(self):
-        self._cache.delete()
+        self.db.delete()
