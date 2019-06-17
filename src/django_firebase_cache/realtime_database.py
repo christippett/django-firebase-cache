@@ -24,7 +24,7 @@ class RealtimeDatabaseCache(BaseCache):
     @property
     def db(self) -> Reference:
         if getattr(self, "_db", None) is None:
-            firebase_admin.initialize_app(options=self._options, name="DJANGOdb")
+            firebase_admin.initialize_app(options=self._options, name="DJANGO")
             ref = db.reference(self.db_key)
             if self.key_prefix:
                 ref = ref.child(self.key_prefix)
