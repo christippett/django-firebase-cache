@@ -1,17 +1,17 @@
 "Firestore cache backend"
 import base64
+import hashlib
 import pickle
 import re
 import warnings
 from datetime import datetime
 
+import firebase_admin
 from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache, CacheKeyWarning
 from django.utils import timezone
-import firebase_admin
 from firebase_admin import db
 from firebase_admin.db import Reference
-
 
 FIREBASE_APP = None
 
@@ -39,7 +39,7 @@ class RealtimeDatabaseCache(BaseCache):
 
         return self._db
 
-    def _set_data(self, mode, value, timeout=DEFAULT_TIMEOUT):
+    def _set_data(self, mode, key, value, timeout=DEFAULT_TIMEOUT):
         if timeout is None:
             exp = datetime.max
         elif settings.USE_TZ:
@@ -53,8 +53,13 @@ class RealtimeDatabaseCache(BaseCache):
         if mode == "touch":
             data = {"expires": exp}
         else:
-            data = {"value": b64encoded, "expires": exp.timestamp()}
+            data = {"key": key, "value": b64encoded, "expires": exp.timestamp()}
         return data
+
+    def make_key(self, key, version=None):
+        key = super().make_key(key, version)
+        md5_key = hashlib.md5(key.encode("utf-8")).hexdigest()
+        return md5_key
 
     def validate_key(self, key):
         if re.search(r"[\.\$\#\[\]\/\n]", key):
@@ -70,7 +75,7 @@ class RealtimeDatabaseCache(BaseCache):
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("add", None, timeout)
+        data = self._set_data("add", key, None, timeout)
         self.db.key(key).set(data)
 
     def get(self, key, default=None, version=None):
@@ -89,21 +94,21 @@ class RealtimeDatabaseCache(BaseCache):
     def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("set", None, timeout)
+        data = self._set_data("set", key, None, timeout)
         self.db.key(key).set(data)
 
     def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
         set_data = {}
         for key, value in data.items():
             key = self.make_key(key, version=version)
-            set_data[key] = self._set_data("set", value, timeout)
+            set_data[key] = self._set_data("set", key, value, timeout)
         self.db.set(set_data)
         return []
 
     def touch(self, key, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("touch", None, timeout)
+        data = self._set_data("touch", key, None, timeout)
         self.db.key(key).update(data)
 
     def delete(self, key, version=None):
