@@ -73,9 +73,10 @@ class RealtimeDatabaseCache(BaseCache):
         super().validate_key(key)
 
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
+        og_key = key
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("add", key, None, timeout)
+        data = self._set_data("add", og_key, None, timeout)
         self.db.child(key).set(data)
 
     def get(self, key, default=None, version=None):
@@ -83,7 +84,7 @@ class RealtimeDatabaseCache(BaseCache):
         self.validate_key(key)
         data = self.db.child(key).get()
         if data:
-            expires = datetime.fromtimestamp(data.get("expires", 0))
+            expires = datetime.utcfromtimestamp(data.get("expires", 0))
             if expires >= timezone.now():
                 value = data.get("value")
                 return pickle.loads(base64.b64decode(value.encode()))
@@ -92,23 +93,26 @@ class RealtimeDatabaseCache(BaseCache):
         return default
 
     def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
+        og_key = key
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("set", key, None, timeout)
+        data = self._set_data("set", og_key, None, timeout)
         self.db.child(key).set(data)
 
     def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
         set_data = {}
         for key, value in data.items():
+            og_key = key
             key = self.make_key(key, version=version)
-            set_data[key] = self._set_data("set", key, value, timeout)
+            set_data[key] = self._set_data("set", og_key, value, timeout)
         self.db.set(set_data)
         return []
 
     def touch(self, key, timeout=DEFAULT_TIMEOUT, version=None):
+        og_key = key
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("touch", key, None, timeout)
+        data = self._set_data("touch", og_key, None, timeout)
         self.db.child(key).update(data)
 
     def delete(self, key, version=None):
