@@ -7,9 +7,7 @@ import warnings
 from datetime import datetime
 
 import firebase_admin
-from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache, CacheKeyWarning
-from django.utils import timezone
 from firebase_admin import db
 from firebase_admin.db import Reference
 
@@ -40,12 +38,11 @@ class RealtimeDatabaseCache(BaseCache):
         return self._db
 
     def _set_data(self, mode, key, value, timeout=DEFAULT_TIMEOUT):
+        timeout = self.get_backend_timeout(timeout)
         if timeout is None:
             exp = datetime.max
-        elif settings.USE_TZ:
-            exp = datetime.utcfromtimestamp(timeout)
         else:
-            exp = datetime.fromtimestamp(timeout)
+            exp = datetime.utcfromtimestamp(timeout)
         exp = exp.replace(microsecond=0)
 
         pickled = pickle.dumps(value, self.pickle_protocol)
@@ -53,7 +50,7 @@ class RealtimeDatabaseCache(BaseCache):
         if mode == "touch":
             data = {"expires": exp}
         else:
-            data = {"key": key, "value": b64encoded, "expires": exp.timestamp()}
+            data = {"cache_key": key, "value": b64encoded, "expires": exp.timestamp()}
         return data
 
     def make_key(self, key, version=None):
@@ -85,7 +82,7 @@ class RealtimeDatabaseCache(BaseCache):
         data = self.db.child(key).get()
         if data:
             expires = datetime.utcfromtimestamp(data.get("expires", 0))
-            if expires >= timezone.now():
+            if expires >= datetime.utcnow():
                 value = data.get("value")
                 return pickle.loads(base64.b64decode(value.encode()))
             else:
