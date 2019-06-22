@@ -82,14 +82,14 @@ class RealtimeDatabaseCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self.db.child(key).get()
-        expires = datetime.fromtimestamp(data.get("expires", 0))
-        if expires >= timezone.now():
-            value = data.get("value")
-            value = pickle.loads(base64.b64decode(value.encode()))
-            return value
-        else:
-            self.delete(key, version)
-            return default
+        if data:
+            expires = datetime.fromtimestamp(data.get("expires", 0))
+            if expires >= timezone.now():
+                value = data.get("value")
+                return pickle.loads(base64.b64decode(value.encode()))
+            else:
+                self.delete(key, version)
+        return default
 
     def set(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
