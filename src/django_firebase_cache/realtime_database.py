@@ -13,6 +13,9 @@ from firebase_admin import db
 from firebase_admin.db import Reference
 
 
+APP_INITIALIZED = False
+
+
 class RealtimeDatabaseCache(BaseCache):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
@@ -24,7 +27,8 @@ class RealtimeDatabaseCache(BaseCache):
     @property
     def db(self) -> Reference:
         if getattr(self, "_db", None) is None:
-            firebase_admin.initialize_app(options=self._options, name="DJANGO")
+            if not APP_INITIALIZED:
+                firebase_admin.initialize_app(options=self._options, name="DJANGO_CACHE")
             ref = db.reference(self.db_key)
             if self.key_prefix:
                 ref = ref.child(self.key_prefix)
