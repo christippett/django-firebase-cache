@@ -76,7 +76,7 @@ class RealtimeDatabaseCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self._set_data("add", key, None, timeout)
-        self.db.key(key).set(data)
+        self.db.child(key).set(data)
 
     def get(self, key, default=None, version=None):
         key = self.make_key(key, version=version)
@@ -95,7 +95,7 @@ class RealtimeDatabaseCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self._set_data("set", key, None, timeout)
-        self.db.key(key).set(data)
+        self.db.child(key).set(data)
 
     def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
         set_data = {}
@@ -109,7 +109,7 @@ class RealtimeDatabaseCache(BaseCache):
         key = self.make_key(key, version=version)
         self.validate_key(key)
         data = self._set_data("touch", key, None, timeout)
-        self.db.key(key).update(data)
+        self.db.child(key).update(data)
 
     def delete(self, key, version=None):
         key = self.make_key(key, version=version)
