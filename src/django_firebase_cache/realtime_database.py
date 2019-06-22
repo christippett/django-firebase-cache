@@ -13,8 +13,7 @@ from firebase_admin import db
 from firebase_admin.db import Reference
 
 
-APP_NAME = "DJANGO_CACHE"
-APP_INITIALIZED = False
+FIREBASE_APP = None
 
 
 class RealtimeDatabaseCache(BaseCache):
@@ -28,9 +27,12 @@ class RealtimeDatabaseCache(BaseCache):
     @property
     def db(self) -> Reference:
         if getattr(self, "_db", None) is None:
-            if not APP_INITIALIZED:
-                firebase_admin.initialize_app(options=self._options, name=APP_NAME)
-            ref = db.reference(self.db_key, app=APP_NAME)
+            global FIREBASE_APP
+            if FIREBASE_APP is None:
+                FIREBASE_APP = firebase_admin.initialize_app(
+                    options=self._options, name="DJANGO_CACHE"
+                )
+            ref = db.reference(self.db_key, app=FIREBASE_APP)
             if self.key_prefix:
                 ref = ref.child(self.key_prefix)
             self._db: Reference = ref
