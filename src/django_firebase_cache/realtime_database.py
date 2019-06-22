@@ -62,7 +62,7 @@ class RealtimeDatabaseCache(BaseCache):
                 "Keys used with Firebase Realtime Database must be UTF-8 "
                 "encoded and can't contain new lines or any of the "
                 "following characters: . $ # [ ] / or any ASCII control "
-                "characters (0x00 - 0x1F and 0x7F: %r" % key,
+                "characters (0x00 - 0x1F and 0x7F): %r" % key,
                 CacheKeyWarning,
             )
         super().validate_key(key)
