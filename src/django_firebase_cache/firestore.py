@@ -14,6 +14,8 @@ from google.cloud.firestore import (
     DocumentSnapshot,
 )
 
+FIRESTORE_CLIENT = None
+
 
 class FirestoreCache(BaseCache):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
@@ -26,8 +28,10 @@ class FirestoreCache(BaseCache):
     @property
     def db(self) -> CollectionReference:
         if getattr(self, "_db", None) is None:
-            client = firestore.Client(**self._options)
-            ref = client.collection(self._collection)
+            global FIRESTORE_CLIENT
+            if FIRESTORE_CLIENT is None:
+                FIRESTORE_CLIENT = firestore.Client(**self._options)
+            ref = FIRESTORE_CLIENT.collection(self._collection)
             self._db: CollectionReference = ref
 
         return self._db
