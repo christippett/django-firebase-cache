@@ -6,7 +6,9 @@ import warnings
 from datetime import datetime
 from typing import Iterable
 
+from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT, BaseCache, CacheKeyWarning
+from django.utils import timezone
 from google.cloud import firestore
 from google.cloud.firestore import (
     CollectionReference,
@@ -40,9 +42,10 @@ class FirestoreCache(BaseCache):
         timeout = self.get_backend_timeout(timeout)
         if timeout is None:
             exp = datetime.max
-        else:
+        elif settings.USE_TZ:
             exp = datetime.utcfromtimestamp(timeout)
-        exp = exp.replace(microsecond=0)
+        else:
+            exp = datetime.fromtimestamp(timeout)
 
         pickled = pickle.dumps(value, self.pickle_protocol)
         b64encoded = base64.b64encode(pickled).decode("utf-8")
@@ -88,7 +91,7 @@ class FirestoreCache(BaseCache):
             return default
         data = doc.to_dict()
         expires = data.get("expires")
-        if expires >= datetime.utcnow():
+        if expires >= timezone.now():
             value = data.get("value")
             value = pickle.loads(base64.b64decode(value.encode()))
             return value
