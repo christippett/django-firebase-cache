@@ -73,7 +73,7 @@ class RealtimeDatabaseCache(BaseCache):
         og_key = key
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("add", og_key, None, timeout)
+        data = self._set_data("add", og_key, value, timeout)
         self.db.child(key).set(data)
 
     def get(self, key, default=None, version=None):
@@ -93,7 +93,7 @@ class RealtimeDatabaseCache(BaseCache):
         og_key = key
         key = self.make_key(key, version=version)
         self.validate_key(key)
-        data = self._set_data("set", og_key, None, timeout)
+        data = self._set_data("set", og_key, value, timeout)
         self.db.child(key).set(data)
 
     def set_many(self, data, timeout=DEFAULT_TIMEOUT, version=None):
