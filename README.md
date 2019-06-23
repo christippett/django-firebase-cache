@@ -5,5 +5,24 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/django-firebase-cache.svg)](https://pypi.python.org/pypi/django-firebase-cache)
 [![Github license](https://img.shields.io/github/license/christippett/django-firebase-cache.svg)](https://github.com/christippett/django-firebase-cache)
 
-## Description
-TBC
+## Install
+```bash
+pip install django-firebase-cache
+```
+
+## Usage
+```python
+# settings.py
+
+CACHES = {
+    "firebase": {
+        "BACKEND": "django_firebase_cache.RealtimeDatabaseCache",
+        "LOCATION": "django",  # name of child key in Realtime Database
+        "OPTIONS": {"databaseURL": "https://project-id.firebaseio.com/"},
+    },
+    "firestore": {
+        "BACKEND": "django_firebase_cache.FirestoreCache",
+        "LOCATION": "django",  # name of collection in Firestore
+    },
+}
+```
