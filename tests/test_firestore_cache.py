@@ -11,10 +11,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "firestore_settings")
 
 DEFAULT_CACHE_LOCATION = settings.CACHES["default"]["LOCATION"]
 
+mock_firestore = MockFirestore()
+
 
 @pytest.fixture(autouse=True)
 def db(monkeypatch):
-    mock_firestore = MockFirestore()
     with monkeypatch.context() as m:
         m.setattr(firestore, "Client", lambda: mock_firestore)
         yield mock_firestore
